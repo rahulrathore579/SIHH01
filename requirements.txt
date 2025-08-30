@@ -5,6 +5,10 @@ itsdangerous==2.2.0
 click==8.1.7
 python-dotenv==1.0.1
 
+# Optional dependencies (install based on your CAMERA_SOURCE)
+picamera2 ; platform_machine == "armv7l" or platform_machine == "aarch64"
+opencv-python>=4.10.0.84
+
 # Image + Video
 opencv-python==4.10.0.84
 opencv-contrib-python==4.10.0.84
