@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="controls">
+	<button id="captureBtn">Capture, Detect & Act</button>
+	<span id="status"></span>
+</section>
+
+<section class="video-section">
+	<div class="video-container">
+		<img id="videoFeed" src="/video_feed" alt="Video Feed" />
+		<div class="video-overlay">
+			<button id="startVideoBtn">Start Video</button>
+			<button id="stopVideoBtn">Stop Video</button>
+			<button id="toggleModeBtn">Toggle Auto Mode</button>
+		</div>
+	</div>
+	<div class="detection-info">
+		<h3>Real-time Leaf Detection</h3>
+		<div class="mode-display">
+			<span>Mode: </span>
+			<span id="modeIndicator" class="mode-indicator manual">MANUAL</span>
+		</div>
+		<p id="detectionStatus">Video not started</p>
+		<div id="leafResults"></div>
+	</div>
+</section>
+
+<section class="status-cards">
+	<div class="card">
+		<h3>Thresholds</h3>
+		<p>Low: <strong>{{ low }}%</strong></p>
+		<p>High: <strong>{{ high }}%</strong></p>
+	</div>
+</section>
+
+<section class="grid">
+	<div class="panel">
+		<h2>Recent Detections</h2>
+		<table>
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Disease</th>
+					<th>Severity</th>
+					<th>Class</th>
+					<th>Image</th>
+					<th>When</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for d in detections %}
+				<tr>
+					<td>{{ d.id }}</td>
+					<td>{{ d.disease }}</td>
+					<td>{{ '%.1f'|format(d.severity or 0) }}%</td>
+					<td>{{ 'healthy' if (d.severity or 0) <= low and (d.disease or '').lower() == 'healthy' else 'infected' }}</td>
+					<td>
+						<img src="/{{ d.image_path | replace('\\', '/') }}" alt="leaf" class="thumb" onerror="this.style.display='none'" />
+					</td>
+					<td>{{ d.created_at }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+
+	<div class="panel">
+		<h2>Recent Actions</h2>
+		<table>
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Action</th>
+					<th>Duration (ms)</th>
+					<th>Severity</th>
+					<th>When</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for a in actions %}
+				<tr>
+					<td>{{ a.id }}</td>
+					<td>{{ a.action }}</td>
+					<td>{{ a.duration_ms }}</td>
+					<td>{{ '%.1f'|format(a.severity or 0) }}%</td>
+					<td>{{ a.duration_ms }}</td>
+					<td>{{ a.created_at }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</section>
+{% endblock %} 
