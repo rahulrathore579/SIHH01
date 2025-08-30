@@ -1,10 +1,10 @@
 import os
 import time
+import platform
 from datetime import datetime
 from typing import Optional
 from flask import current_app
 from PIL import Image, ImageDraw
-
 
 class CameraService:
     def __init__(self, source: Optional[str] = None) -> None:
@@ -19,8 +19,11 @@ class CameraService:
         self._cap = None
         self.source = source or "auto"
 
-        # Try PiCamera2
-        if self.source in ("auto", "picamera2"):
+        # Detect if we are on Raspberry Pi
+        is_raspberry_pi = platform.machine().startswith("arm") and platform.system() == "Linux"
+
+        # Try PiCamera2 on Raspberry Pi
+        if self.source in ("auto", "picamera2") and is_raspberry_pi:
             try:
                 from picamera2 import Picamera2  # type: ignore
                 self._picam2 = Picamera2()
@@ -35,7 +38,7 @@ class CameraService:
                 if self.source == "picamera2":
                     self.source = "mock"
 
-        # Try OpenCV
+        # Try OpenCV webcam
         if self.source in ("auto", "opencv"):
             try:
                 import cv2  # type: ignore
@@ -52,10 +55,9 @@ class CameraService:
                 print(f"[CameraService] OpenCV unavailable: {exc}")
                 self.source = "mock"
 
-        # Fallback Mock
-        if self.source == "auto" or self.source == "mock":
-            self.source = "mock"
-            print("[CameraService] Using mock camera")
+        # Fallback to Mock
+        self.source = "mock"
+        print("[CameraService] Using mock camera")
 
     def capture_image(self) -> str:
         """
@@ -77,12 +79,15 @@ class CameraService:
 
         # OpenCV webcam
         if self.source == "opencv" and self._cv2 is not None and self._cap is not None:
-            ret, frame = self._cap.read()
-            if ret:
-                self._cv2.imwrite(file_path, frame)
-                return file_path
-            else:
-                print("[CameraService] OpenCV capture failed")
+            try:
+                ret, frame = self._cap.read()
+                if ret:
+                    self._cv2.imwrite(file_path, frame)
+                    return file_path
+                else:
+                    print("[CameraService] OpenCV capture failed")
+            except Exception as exc:
+                print(f"[CameraService] OpenCV capture exception: {exc}")
 
         # Mock image fallback
         img = Image.new("RGB", (640, 480), color=(60, 120, 60))
@@ -108,3 +113,15 @@ def get_camera() -> CameraService:
         source = current_app.config.get("CAMERA_SOURCE", None)
         _camera_instance = CameraService(source)
     return _camera_instance
+
+
+# Optional: Video feed generator for Flask streaming
+def generate_video():
+    camera = get_camera()
+    while True:
+        frame_path = camera.capture_image()
+        with open(frame_path, "rb") as f:
+            frame_bytes = f.read()
+        yield (b"--frame\r\n"
+               b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n")
+        time.sleep(0.1)  # Limit FPS
