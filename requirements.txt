@@ -6,13 +6,11 @@ click==8.1.7
 python-dotenv==1.0.1
 opencv-python==4.10.0.84
 opencv-contrib-python==4.10.0.84
-numpy==1.26.4
+numpy>=1.26,<2.0
 requests==2.32.3
 Pillow==10.4.0
 # On Raspberry Pi, install manually:
 # pip install https://github.com/google-coral/pycoral/releases/download/release-frogfish/tflite_runtime-2.15.0-<your_python>-<your_arch>.whl
 google-generativeai>=0.7.2
-
-tensorflow>=2.15,<2.21
-
-protobuf==4.25.1
+tensorflow>=2.20,<2.21
+# protobuf removed → TensorFlow will auto-install the correct version
