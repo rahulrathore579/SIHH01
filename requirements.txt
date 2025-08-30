@@ -13,3 +13,4 @@ Pillow==10.4.0
 # pip install https://github.com/google-coral/pycoral/releases/download/release-frogfish/tflite_runtime-2.15.0-<your_python>-<your_arch>.whl
 google-generativeai>=0.7.2
 tensorflow>=2.20,<2.21
+gunicorn
